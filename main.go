@@ -2,6 +2,7 @@ package main
 
 import (
 	"go_api/controller/todos"
+	"go_api/middleware/auth"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,11 +10,21 @@ import (
 func main() {
 
 	r := gin.Default()
+	authorized := r.Group("/")
+	authorized.Use(auth.AuthRequired)
+	authorized.Use(auth.AuthCheckRole())
 
-	r.GET("/api/todos", todos.All)
-	r.POST("/api/add", todos.Add)
-	r.PUT("/api/update/:id", todos.Update)
-	r.DELETE("/api/delete/:id", todos.Delete)
+	{
+		authorized.GET("/api/users", todos.All)
+		authorized.POST("/api/add", todos.Add)
+		authorized.PUT("/api/update/:id", todos.Update)
+		authorized.DELETE("/api/delete/:id", todos.Delete)
+		authorized.POST("/api/todo/:id", todos.FetchOne)
+		authorized.POST("api/addcabin", todos.AddCasbin)
+
+	}
+	r.POST("/api/login", todos.Login)
+
 	r.Run()
 
 }

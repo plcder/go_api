@@ -1,40 +1,50 @@
 package database
 
 import (
-	"context"
 	"io/ioutil"
 	"log"
 
-	"go_api/model"
+	"go_api/model/users"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4"
 	yaml "gopkg.in/yaml.v2"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
-func Open() *pgx.Conn {
+func Open() *gorm.DB {
 
 	conf := Config()
-	var conn *pgx.Conn
+	var db *gorm.DB
 	var err error
 
+	dsn := "user=" + conf.User + " password=" + conf.Password + " dbname=" + conf.Name + " port=" + conf.Port + " sslmode=disable TimeZone=Asia/Taipei"
 	if gin.Mode() == gin.ReleaseMode {
 
-		conn, err = pgx.Connect(context.Background(), "postgres://"+conf.User+":"+conf.Password+"@"+conf.Host+":"+conf.Port+"/postgres")
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+			Logger:                                   logger.Default.LogMode(logger.Info),
+			DisableForeignKeyConstraintWhenMigrating: true,
+		})
 	} else {
-		conn, err = pgx.Connect(context.Background(), "postgres://"+conf.User+":"+conf.Password+"@"+conf.Host+":"+conf.Port+"/postgres")
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+			Logger:                                   logger.Default.LogMode(logger.Info),
+			DisableForeignKeyConstraintWhenMigrating: true,
+		})
 	}
 
 	if err != nil {
 		panic(err)
 	}
 
-	return conn
+	db.AutoMigrate(&users.Person{})
+
+	return db
 
 }
 
-func Config() (conf *model.Postgresql) {
-	conf = new(model.Postgresql)
+func Config() (conf *users.Postgresql) {
+	conf = new(users.Postgresql)
 	yamlFile, _ := ioutil.ReadFile("database/Postgres.yaml")
 
 	errUn := yaml.Unmarshal(yamlFile, conf)

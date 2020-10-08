@@ -1,12 +1,10 @@
 package todos
 
 import (
-	"context"
 	"fmt"
 	"go_api/database"
 	"go_api/middleware/auth"
-	"go_api/model"
-	"log"
+	"go_api/model/users"
 	"net/http"
 
 	jwt "github.com/appleboy/gin-jwt/v2"
@@ -15,20 +13,21 @@ import (
 )
 
 func Login(c *gin.Context) {
-	var loginVals model.Login
+	var loginVals users.Login
 	if err := c.ShouldBind(&loginVals); err != nil {
 		fmt.Println(jwt.ErrMissingLoginValues)
 	}
-	conn := database.Open()
-	defer conn.Close(context.Background())
+	db := database.Open()
+
 	var sql string
 
-	sql = `SELECT * FROM public.user WHERE username=$1 AND password=$2`
+	sql = `SELECT * FROM public.people WHERE username=? AND password=?`
 
-	var person model.Person
-	if err := conn.QueryRow(context.Background(), sql, loginVals.Username, loginVals.Password).Scan(&person.Id, &person.Username, &person.Password, &person.Age, &person.Role); err != nil {
+	var person users.Person
+	if err := db.Raw(sql, loginVals.Username, loginVals.Password).First(&person).Error; err != nil {
 		fmt.Println(err)
 	} else {
+		fmt.Println(person.Role)
 		token, err := auth.GenerToken(person.Username, person.Role)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -45,51 +44,40 @@ func Login(c *gin.Context) {
 
 func All(c *gin.Context) {
 
-	conn := database.Open()
-	defer conn.Close(context.Background())
+	db := database.Open()
+	var persons users.Persons
 
-	rows, _ := conn.Query(context.Background(), `SELECT * FROM public.user`)
+	rows := db.Raw(`SELECT * FROM public.user`).Scan(&persons)
 
-	for rows.Next() {
-		var user model.Person
-		if err := rows.Scan(&user.Id, &user.Username, &user.Password, &user.Age, &user.Role); err != nil {
-			fmt.Println(err)
-		}
-
-		c.JSON(http.StatusOK, user)
-	}
-
+	c.JSON(http.StatusOK, rows)
 }
 
 func Add(c *gin.Context) {
-	conn := database.Open()
-	defer conn.Close(context.Background())
+	db := database.Open()
 
-	var person model.Person
+	var person users.Person
 	if err := c.BindJSON(&person); err != nil {
 		c.AbortWithStatus(http.StatusBadRequest)
 	}
 
-	if _, err := conn.Exec(context.Background(), `insert into public.user(username, password, age) values($1, $2, $3)`, person.Username, person.Password, person.Age); err != nil {
+	if err := db.Create(&person).Error; err != nil {
+		fmt.Println(err)
 		c.AbortWithStatus(http.StatusInternalServerError)
-		log.Panicln(err)
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+	c.JSON(http.StatusOK, person)
 
 }
 
 func FetchOne(c *gin.Context) {
 	id := c.Param("id")
 
-	conn := database.Open()
-	defer conn.Close(context.Background())
+	db := database.Open()
 
-	var person model.Person
-	if err := conn.QueryRow(context.Background(), `SELECT * FROM public.user WHERE id=$1`, id).Scan(&person.Id, &person.Username, &person.Password, &person.Age, &person.Role); err != nil {
-		c.AbortWithStatus(http.StatusNotFound)
+	var person users.Person
+	if err := db.Model(&person).Where("id = ?", id).First(&person).Error; err != nil {
 		fmt.Println(err)
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
@@ -99,18 +87,17 @@ func FetchOne(c *gin.Context) {
 func Update(c *gin.Context) {
 	id := c.Param("id")
 
-	var putUser model.UpdateUser
+	var putUser users.UpdateUser
 
 	if err := c.BindJSON(&putUser); err != nil {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	conn := database.Open()
-	defer conn.Close(context.Background())
+	db := database.Open()
 
-	if _, err := conn.Exec(context.Background(), `update public.user set username=$1, age=$2, password=$3, role=$4 where id=$5`, putUser.Username, putUser.Age, putUser.Password, putUser.Role, id); err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
+	if err := db.Model(&putUser).Where("id = ?", id).Error; err != nil {
+		fmt.Println(err)
+		c.Status(http.StatusBadRequest)
 	}
 	c.JSON(http.StatusOK, gin.H{"id": id, "msg": "更新成功"})
 
@@ -119,10 +106,10 @@ func Update(c *gin.Context) {
 func Delete(c *gin.Context) {
 	id := c.Param("id")
 
-	conn := database.Open()
-	defer conn.Close(context.Background())
+	db := database.Open()
+	var person users.Person
 
-	if _, err := conn.Exec(context.Background(), `delete from users where id=$1`, id); err != nil {
+	if err := db.Model(&person).Where("id = ?", id).Error; err != nil {
 		fmt.Println(err)
 		c.Status(http.StatusInternalServerError)
 		return
@@ -132,7 +119,7 @@ func Delete(c *gin.Context) {
 }
 
 func AddCasbin(c *gin.Context) {
-	var casbind model.CasbinBind
+	var casbind users.CasbinBind
 	if err := c.BindJSON(&casbind); err != nil {
 		c.Status(http.StatusInternalServerError)
 		return

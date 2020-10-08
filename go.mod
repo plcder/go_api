@@ -11,7 +11,9 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/autotls v0.0.0-20191129055149-ffaac874b99f // indirect
 	github.com/gin-gonic/gin v1.5.0
-	github.com/jackc/pgx/v4 v4.5.0
+	github.com/jackc/pgx/v4 v4.9.0
 	google.golang.org/genproto v0.0.0-20200313141609-30c55424f95d // indirect
 	gopkg.in/yaml.v2 v2.2.7
+	gorm.io/driver/postgres v1.0.2
+	gorm.io/gorm v1.20.2
 )

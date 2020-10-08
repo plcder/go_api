@@ -15,6 +15,7 @@ func main() {
 	authorized.Use(auth.AuthCheckRole())
 
 	{
+		r.POST("/add", todos.Add)
 		authorized.GET("/api/users", todos.All)
 		authorized.POST("/api/add", todos.Add)
 		authorized.PUT("/api/update/:id", todos.Update)

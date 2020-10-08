@@ -1,14 +1,23 @@
-package model
+package users
 
+import "gorm.io/gorm"
+
+type Base struct {
+	gorm.Model
+}
 type Person struct {
-	Id       int    `json:"id"`
+	Base
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Role     string `json:"role"`
 	Age      int    `json:"age"`
 }
+
+type Persons struct {
+	Persons []Person `json:"persons"`
+}
 type AddUser struct {
-	Id       int    `json:"id"`
+	Base
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Role     string `json:"role"`
@@ -16,7 +25,7 @@ type AddUser struct {
 }
 
 type UpdateUser struct {
-	Id       int    `json:"id"`
+	Base
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Role     string `json:"role"`

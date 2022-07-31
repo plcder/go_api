@@ -11,8 +11,8 @@ import (
 
 	"github.com/casbin/casbin/v2"
 	casbinpgadapter "github.com/cychiuae/casbin-pg-adapter"
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	jwt "github.com/golang-jwt/jwt/v4"
 )
 
 type Claims struct {

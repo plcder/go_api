@@ -1,7 +1,6 @@
 package database
 
 import (
-	"go_api/struct/users"
 	"io/ioutil"
 	"log"
 
@@ -43,8 +42,6 @@ func Open() *gorm.DB {
 	if err != nil {
 		panic(err)
 	}
-
-	db.AutoMigrate(&users.Person{})
 
 	return db
 

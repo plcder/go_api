@@ -1,10 +1,9 @@
 package database
 
 import (
+	"go_api/struct/users"
 	"io/ioutil"
 	"log"
-
-	"go_api/model/users"
 
 	"github.com/gin-gonic/gin"
 	yaml "gopkg.in/yaml.v2"
@@ -12,6 +11,14 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
+
+type Postgresql struct {
+	User     string `yaml:"user"`
+	Host     string `yaml:"host"`
+	Password string `yaml:"password"`
+	Port     string `yaml:"port"`
+	Name     string `yaml:"name"`
+}
 
 func Open() *gorm.DB {
 
@@ -43,8 +50,8 @@ func Open() *gorm.DB {
 
 }
 
-func Config() (conf *users.Postgresql) {
-	conf = new(users.Postgresql)
+func Config() (conf *Postgresql) {
+	conf = new(Postgresql)
 	yamlFile, _ := ioutil.ReadFile("database/Postgres.yaml")
 
 	errUn := yaml.Unmarshal(yamlFile, conf)

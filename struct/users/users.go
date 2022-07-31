@@ -45,14 +45,6 @@ type LoginDB struct {
 	Password string `form:"password" json:"password" binding:"required"`
 }
 
-type Postgresql struct {
-	User     string `yaml:"user"`
-	Host     string `yaml:"host"`
-	Password string `yaml:"password"`
-	Port     string `yaml:"port"`
-	Name     string `yaml:"name"`
-}
-
 type CasbinBind struct {
 	Ptype    string `json:"ptype"`
 	Rolename string `json:"rolename"`
